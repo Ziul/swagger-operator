@@ -249,3 +249,7 @@ $RECYCLE.BIN/
 static/
 
 # End of https://www.toptal.com/developers/gitignore/api/linux,windows,macos,python
+
+helm/
+.git/
+.github/

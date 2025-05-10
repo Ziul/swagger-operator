@@ -4,6 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 import json
 import os
+import httpx
 
 app = FastAPI()
 
@@ -45,6 +46,28 @@ fastapi_ui_html = """
 </html>
 """
 
+@app.get("/proxy", include_in_schema=False)
+async def proxy(url: str):
+    """
+    Proxy endpoint to fetch the OpenAPI JSON from a given URL.
+    """
+    async with httpx.AsyncClient() as client:
+        response = await client.get(url)
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return HTMLResponse(
+                content=f"<h1>Failed to fetch OpenAPI JSON from {url}</h1>",
+                status_code=500,
+            )
+
+def apply_proxy_to_openapi(openapi_url: str):
+    """
+    Apply the proxy to the OpenAPI URL.
+    """
+    if openapi_url.startswith("http"):
+        return f"/proxy?url={openapi_url}"
+    return openapi_url
 
 @app.get("/", response_class=HTMLResponse)
 async def docs(request: Request):
@@ -65,6 +88,10 @@ async def docs(request: Request):
                 "name": "Swagger Aggregator",
             }
         ]
+
+    for swagger in swaggers:
+        swagger["url"] = apply_proxy_to_openapi(swagger["url"])
+
     # Renderiza o template HTML diretamente
     html = fastapi_ui_html.replace(
         "{{ urls | safe }}", json.dumps(swaggers)

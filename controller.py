@@ -14,11 +14,7 @@ async def cleanup_fn(logger, **kwargs):
 @kopf.on.event('v1', 'services', 
                 annotations={os.environ.get('SWAGGER_OPERATOR_PATH_KEY', 'swagger-operator-path'):kopf.PRESENT},
                )
-def create_fn(event, memo: kopf.Memo, logger, **kwargs):
-    """
-    This function is called when a new resource is created.
-    It prints the event type and the resource name.
-    """
+def service_event(event, memo: kopf.Memo, logger, **kwargs):
     path_key = os.environ.get('SWAGGER_OPERATOR_PATH_KEY', 'swagger-operator-path')
     name_key = os.environ.get('SWAGGER_OPERATOR_NAME_KEY', 'swagger-operator-name')
     name_port = os.environ.get('SWAGGER_OPERATOR_PORT_KEY', 'swagger-operator-port')

@@ -45,6 +45,11 @@ metadata:
     swagger-operator-path: "/openapi.json"   # Path to your OpenAPI spec
     swagger-operator-name: "My Service"      # (Optional) Display name
     swagger-operator-port: "8080"            # (Optional) Service port
+    swagger-operator-header: |
+      Authorization: Basic dXNlcm5hbWU6cGFzc3dvcmQ=
+      X-Custom-Header: my-value
+      Another-Header: another-value
+    # (Optional) Extra headers
 ```
 
 ### 5. Access the Swagger UI
@@ -56,6 +61,7 @@ Expose the FastAPI server (default port: 8000) and access `/` to see the aggrega
 - `SWAGGER_OPERATOR_PATH_KEY` (default: `swagger-operator-path`)
 - `SWAGGER_OPERATOR_NAME_KEY` (default: `swagger-operator-name`)
 - `SWAGGER_OPERATOR_PORT_KEY` (default: `swagger-operator-port`)
+- `SWAGGER_OPERATOR_HEADER_KEY` (default: `swagger-operator-header`)
 - `TITLE` (default: `API Documentation`)
 
 ## Development

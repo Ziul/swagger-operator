@@ -19,6 +19,7 @@ def service_event(event, memo: kopf.Memo, logger, **kwargs):
     path_key = os.environ.get('SWAGGER_OPERATOR_PATH_KEY', 'swagger-operator-path')
     name_key = os.environ.get('SWAGGER_OPERATOR_NAME_KEY', 'swagger-operator-name')
     name_port = os.environ.get('SWAGGER_OPERATOR_PORT_KEY', 'swagger-operator-port')
+    name_header = os.environ.get('SWAGGER_OPERATOR_HEADER_KEY', 'swagger-operator-header')
     annotations = event['object']['metadata'].get('annotations', {})
 
     application_path = annotations[path_key]
@@ -42,6 +43,7 @@ def service_event(event, memo: kopf.Memo, logger, **kwargs):
         memo.apps.update({f"{namespace}/{application_name}": {
             'url': urlunparse(application_url),
             'name': application_name,
+            'header': annotations.get(name_header, ""),
         }})
 
     logger.debug(list(memo.apps.keys()))

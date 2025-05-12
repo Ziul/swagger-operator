@@ -1,6 +1,7 @@
 import kopf
 import os
-from urllib.parse import urlunparse
+from urllib.parse import urlunparse, urlparse
+
 
 
 @kopf.on.startup()
@@ -26,17 +27,20 @@ def service_event(event, memo: kopf.Memo, logger, **kwargs):
     application_name = annotations.get(name_key, service_name)
     namespace = event['object']['metadata']['namespace']
 
-    if not application_path.startswith('/'):
-        application_path = "/" + application_path
+    application_url = urlparse(application_path)
+    if not application_url.netloc:
+        if not application_url.path.startswith('/'):
+            application_url = urlparse(f"/{application_url.path}")
+        application_url = urlparse(f"http://{service_name}.{namespace}.svc.cluster.local:{application_port}{application_path}")
 
-    netloc = f"{service_name}.{namespace}.svc.cluster.local:{application_port}"
+
 
     if event['type'] == 'DELETED':
         if f"{namespace}/{application_name}" in memo.apps:
             del memo.apps[f"{namespace}/{application_name}"]
     else:
         memo.apps.update({f"{namespace}/{application_name}": {
-            'url': urlunparse(("http", netloc, application_path, '', '', '')),
+            'url': urlunparse(application_url),
             'name': application_name,
         }})
 

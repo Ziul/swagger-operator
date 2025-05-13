@@ -96,6 +96,7 @@ async def docs(request: Request):
             {
                 "url": "/openapi.json",
                 "name": "Swagger Aggregator",
+                "header": "",
             }
         ]
     except json.JSONDecodeError:
@@ -103,6 +104,7 @@ async def docs(request: Request):
             {
                 "url": "/openapi.json",
                 "name": "Swagger Aggregator",
+                "header": "",
             }
         ]
 

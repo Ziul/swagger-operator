@@ -1,6 +1,10 @@
 name: Swagger workflow
 on:
+  release:
+    types: [published]
   push:
+    paths-ignore:
+      - .github/*
     branches:
       - main
   pull_request:

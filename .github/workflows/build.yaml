@@ -6,6 +6,19 @@ on:
       version:
         description: version created on this build
         value: ${{ jobs.build.outputs.version }}
+    secrets:
+      DOCKER_REGISTRY:
+        description: Docker registry URL
+        required: true
+      DOCKER_USERNAME:
+        description: Docker username
+        required: true
+      DOCKER_PASSWORD:
+        description: Docker password
+        required: true
+      DOCKER_REPOSITORY:
+        description: Docker repository name
+        required: true
 
 jobs:
   versioning:

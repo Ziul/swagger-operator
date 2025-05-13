@@ -1,0 +1,14 @@
+name: Swagger workflow
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  standard_flow:
+    name: Standard Flow
+    uses: ./.github/workflows/build.yaml

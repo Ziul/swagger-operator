@@ -1,0 +1,17 @@
+name: Testing
+
+on:
+  workflow_call:
+
+jobs:
+  security:
+    name: security
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Secret Scanning
+        uses: trufflesecurity/trufflehog@main
+        with:
+          base: ""
+          head: ${{ github.ref_name }}
+          extra_args: --results=verified,unknown

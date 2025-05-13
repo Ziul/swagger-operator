@@ -42,8 +42,11 @@ jobs:
           if [[ "${{ github.event_name }}" != "release" ]]; then
             echo "MajorMinorPatch=${{ env.GitVersion_MajorMinorPatch }}" >> "$GITHUB_OUTPUT"
             echo "FullSemVer=${{ env.GitVersion_FullSemVer }}" >> "$GITHUB_OUTPUT"
+            echo "# Build version: ${{ env.GitVersion_MajorMinorPatch }}" >> $GITHUB_STEP_SUMMARY
+            echo "## FullSemVer: ${{ env.GitVersion_FullSemVer }}" >> "$GITHUB_STEP_SUMMARY
           else
             echo "MajorMinorPatch=${GITHUB_REF#refs/*/}" >> "$GITHUB_OUTPUT"
             echo "FullSemVer=${GITHUB_REF#refs/*/}" >> "$GITHUB_OUTPUT"
+            echo "# Build version: ${GITHUB_REF#refs/*/}" >> $GITHUB_STEP_SUMMARY
           fi
           echo '${{ toJson(github) }}' | jq .

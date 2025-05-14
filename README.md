@@ -103,4 +103,4 @@ MIT License
 
 ---
 
-Made with ❤️ by [Luiz Oliveira](https://github.com/ziul)
+Made with ❤️ by [Luiz Oliveira](https://github.com/ziul) and [Gustavo Coelho](https://github.com/gutorc92)

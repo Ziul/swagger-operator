@@ -6,6 +6,9 @@ on:
     paths-ignore:
       - '.github/**'
       - './**/*.md'
+      - 'README.md'
+      - 'LICENSE'
+      - 'CODE_OF_CONDUCT.md'
     branches:
       - main
   pull_request:

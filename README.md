@@ -1,6 +1,6 @@
 # Swagger Operator
 
-A Kubernetes operator that automatically discovers services annotated with OpenAPI/Swagger documentation and aggregates their documentation in a single FastAPI-based UI.
+A Kubernetes operator that automatically discovers services annotated with OpenAPI/Swagger documentation and aggregates their documentation in a single UI.
 
 ## Features
 
@@ -34,7 +34,7 @@ Replace `<DESIRED_VERSION>` with the desired release version.
 If you prefer, clone the repository for customization or local development:
 
 ```bash
-git clone https://github.com/yourusername/swagger-operator.git
+git clone https://github.com/ziuloliveira/swagger-operator.git
 cd swagger-operator
 ```
 
@@ -67,7 +67,7 @@ metadata:
 
 ### 6. Access the Swagger UI
 
-Expose the FastAPI server (default port: 8000) and access `/` to see the aggregated documentation.
+Expose the operator service (default port: 80) and access `/` to see the aggregated documentation.
 
 ## Environment Variables
 

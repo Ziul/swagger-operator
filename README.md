@@ -7,7 +7,7 @@ A Kubernetes operator that automatically discovers services annotated with OpenA
 - Watches Kubernetes services for specific annotations.
 - Aggregates OpenAPI/Swagger endpoints from discovered services.
 - Serves a dynamic Swagger UI using FastAPI.
-- Easy deployment with Docker.
+- Easy deployment with Docker or Helm.
 
 ## Requirements
 
@@ -15,27 +15,40 @@ A Kubernetes operator that automatically discovers services annotated with OpenA
 - Kubernetes cluster
 - Docker (for containerization)
 - [Poetry](https://python-poetry.org/) for dependency management
+- [Helm](https://helm.sh/) (optional, for easy installation)
 
 ## Getting Started
 
-### 1. Clone the repository
+### 1. Install with Helm (recommended)
+
+You can install the Swagger Operator easily using the Helm Chart available on Docker Hub:
+
+```bash
+helm install swagger oci://registry-1.docker.io/ziuloliveira/swagger-operator --version <DESIRED_VERSION>-chart
+```
+
+Replace `<DESIRED_VERSION>` with the desired release version.
+
+### 2. Clone the repository (optional)
+
+If you prefer, clone the repository for customization or local development:
 
 ```bash
 git clone https://github.com/yourusername/swagger-operator.git
 cd swagger-operator
 ```
 
-### 2. Build the Docker image
+### 3. Build the Docker image
 
 ```bash
 docker build -t swagger-operator:latest .
 ```
 
-### 3. Deploy to Kubernetes
+### 4. Deploy to Kubernetes
 
 You can deploy the operator as a Deployment in your cluster. Make sure to set the required environment variables if you want to customize annotation keys and a service account with permissions to watch `services` events.
 
-### 4. Annotate your services
+### 5. Annotate your services
 
 Add the following annotation to your Kubernetes services:
 
@@ -52,7 +65,7 @@ metadata:
     # (Optional) Extra headers
 ```
 
-### 5. Access the Swagger UI
+### 6. Access the Swagger UI
 
 Expose the FastAPI server (default port: 8000) and access `/` to see the aggregated documentation.
 

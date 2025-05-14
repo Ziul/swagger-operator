@@ -27,8 +27,8 @@ jobs:
       runner: ubuntu-latest
   test:
     uses: ./.github/workflows/tests.yaml
-  build:
-    name: Building
+  build-docker:
+    name: Docker Building
     runs-on: ubuntu-latest
     needs: [versioning, test]
     if: github.ref_name == 'main' || github.event_name == 'release'
@@ -60,3 +60,17 @@ jobs:
           tags: |
             ${{ secrets.DOCKER_REGISTRY }}/${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_REPOSITORY }}:${{ needs.versioning.outputs.MajorMinorPatch }}
             ${{ secrets.DOCKER_REGISTRY }}/${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_REPOSITORY }}:latest
+  build-helm:
+    name: Helm Building
+    runs-on: ubuntu-latest
+    needs: [versioning, test]
+    if: github.ref_name == 'main' || github.event_name == 'release'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Helm Build
+        run: |
+          helm package ./charts/swagger-operator --app-version ${{ needs.versioning.outputs.MajorMinorPatch }} --version ${{ needs.versioning.outputs.MajorMinorPatch }}
+          helm repo index . --url ${{ secrets.DOCKER_REGISTRY }}/${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_REPOSITORY }}
+          helm registry login ${{ secrets.DOCKER_REGISTRY }} --username ${{ secrets.DOCKER_USERNAME }} --password ${{ secrets.DOCKER_PASSWORD }}
+          helm push swagger-operator-${{ needs.versioning.outputs.MajorMinorPatch }}.tgz oci://${{ secrets.DOCKER_REGISTRY }}/${{ secrets.DOCKER_USERNAME }}
+  

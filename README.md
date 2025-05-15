@@ -75,6 +75,7 @@ Expose the operator service (default port: 80) and access `/` to see the aggrega
 - `SWAGGER_OPERATOR_NAME_KEY` (default: `swagger-operator-name`)
 - `SWAGGER_OPERATOR_PORT_KEY` (default: `swagger-operator-port`)
 - `SWAGGER_OPERATOR_HEADER_KEY` (default: `swagger-operator-header`)
+- `PROXY_TIMEOUT` (default: `10`)
 - `TITLE` (default: `API Documentation`)
 
 ## Development

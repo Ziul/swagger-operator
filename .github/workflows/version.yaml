@@ -49,4 +49,3 @@ jobs:
             echo "FullSemVer=${GITHUB_REF#refs/*/}" >> "$GITHUB_OUTPUT"
             echo "# Build version: ${GITHUB_REF#refs/*/}" >> $GITHUB_STEP_SUMMARY
           fi
-          echo '${{ toJson(github) }}' | jq .

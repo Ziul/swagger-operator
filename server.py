@@ -24,9 +24,9 @@ async def proxy(url: str, headers: str = None):
     Proxy endpoint to fetch the OpenAPI JSON from a given URL.
     """
     if headers:
-        response = requests.get(url, headers=json.loads(unquote(headers)))
+        response = requests.get(url, headers=json.loads(unquote(headers)), timeout=int(os.environ.get("PROXY_TIMEOUT", 10)))
     else:
-        response = requests.get(url)
+        response = requests.get(url, timeout=int(os.environ.get("PROXY_TIMEOUT", 10)))
     return response.json()
 
 def parse_headers(header_string: str) -> dict:
@@ -56,6 +56,9 @@ def apply_proxy_to_openapi(openapi_url: str, header: str = None) -> str:
 
 @app.get("/", response_class=HTMLResponse)
 async def docs(request: Request):
+    """
+    Main documentation page.
+    """
     try:
         with open('static/openapi/urls.json') as f:
             swaggers = json.load(f)
@@ -77,7 +80,7 @@ async def docs(request: Request):
         ]
 
     for swagger in swaggers:
-        swagger["url"] = apply_proxy_to_openapi(swagger["url"], parse_headers(swagger["header"]))
+        swagger["url"] = apply_proxy_to_openapi(swagger.get("url"), parse_headers(swagger.get("header")))
 
     return templates.TemplateResponse(
         "swagger.html",
@@ -85,5 +88,39 @@ async def docs(request: Request):
             "request": request,
             "urls": swaggers,
             "title": os.environ.get("TITLE", "API Documentation"),
+        }
+    )
+
+@app.get("/config", response_class=HTMLResponse, include_in_schema=False)
+async def config(request: Request):
+    """
+    Configuration page for the OpenAPI URLs.
+    """
+    try:
+        with open('static/openapi/urls.json') as f:
+            swaggers = json.load(f)
+    except FileNotFoundError:
+        swaggers = [
+            {
+                "url": "/openapi.json",
+                "name": "Swagger Aggregator",
+                "header": "",
+            }
+        ]
+    except json.JSONDecodeError:
+        swaggers = [
+            {
+                "url": "/openapi.json",
+                "name": "Swagger Aggregator",
+                "header": "",
+            }
+        ]
+
+    return templates.TemplateResponse(
+        "config.html",
+        {
+            "request": request,
+            "urls": swaggers,
+            "title": os.environ.get("TITLE", "API Documentation - Config"),
         }
     )

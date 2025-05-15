@@ -1,7 +1,9 @@
 import kopf
 import os
+import threading
+import json
 from urllib.parse import urlunparse, urlparse
-
+file_lock = threading.Lock()
 
 
 @kopf.on.startup()
@@ -49,6 +51,7 @@ def service_event(event, memo: kopf.Memo, logger, **kwargs):
     logger.debug(list(memo.apps.keys()))
     logger.debug(list(memo.apps.values()))
     urls = list(memo.apps.values())
-    with open('static/openapi/urls.json', 'w') as file:
-        file.write(str(urls).replace("'", '"'))
-        logger.info("URLs written to file.")
+    with file_lock:
+        with open('static/openapi/urls.json', 'w') as file:
+            json.dump(urls, file, indent=2)
+            logger.info("URLs written to file.")

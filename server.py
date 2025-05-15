@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -23,11 +23,15 @@ async def proxy(url: str, headers: str = None):
     """
     Proxy endpoint to fetch the OpenAPI JSON from a given URL.
     """
-    if headers:
-        response = requests.get(url, headers=json.loads(unquote(headers)), timeout=int(os.environ.get("PROXY_TIMEOUT", 10)))
-    else:
-        response = requests.get(url, timeout=int(os.environ.get("PROXY_TIMEOUT", 10)))
-    return response.json()
+    try:
+        if headers:
+            response = requests.get(url, headers=json.loads(unquote(headers)), timeout=int(os.environ.get("PROXY_TIMEOUT", 10)))
+        else:
+            response = requests.get(url, timeout=int(os.environ.get("PROXY_TIMEOUT", 10)))
+        return response.json()
+    except requests.RequestException as e:
+        logger.error(f"Error fetching OpenAPI JSON: {e}")
+        raise HTTPException(status_code=500, detail={"error": "Failed to fetch OpenAPI JSON", "details": str(e)})
 
 def parse_headers(header_string: str) -> dict:
     headers = {}
@@ -60,9 +64,11 @@ async def docs(request: Request):
     Main documentation page.
     """
     try:
-        with open('static/openapi/urls.json') as f:
+        with open('static/openapi/urls.json', 'r') as f:
             swaggers = json.load(f)
+            logger.info(f"Loaded {len(swaggers)} URLs.")
     except FileNotFoundError:
+        logger.error("File not found: static/openapi/urls.json")
         swaggers = [
             {
                 "url": "/openapi.json",
@@ -71,6 +77,7 @@ async def docs(request: Request):
             }
         ]
     except json.JSONDecodeError:
+        logger.error("Error decoding JSON from static/openapi/urls.json")
         swaggers = [
             {
                 "url": "/openapi.json",

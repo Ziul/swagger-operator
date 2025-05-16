@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Redoc Aggregator</title>
+  <link rel="shortcut icon" href="https://fastapi.tiangolo.com/img/favicon.png">
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; }
+    #app { padding: 0; }
+    .redoc-header {
+      width: 100vw;
+      background: #222426;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding: 16px 32px;
+      box-sizing: border-box;
+      min-height: 60px;
+    }
+    .redoc-select-label {
+      color: #fff;
+      font-size: 16px;
+      font-weight: 600;
+      margin-right: 12px;
+      margin-bottom: 0;
+      display: inline-block;
+    }
+    .redoc-select {
+      font-family: inherit;
+      font-size: 16px;
+      color: #32329f;
+      background: #fff;
+      border: 1.5px solid #8fd400;
+      border-radius: 4px;
+      padding: 6px 12px;
+      outline: none;
+      min-width: 200px;
+      max-width: 320px;
+      margin-bottom: 0;
+      transition: border-color 0.2s;
+    }
+    .redoc-select:focus {
+      border-color: #32329f;
+    }
+    redoc { width: 100vw; height: 90vh; display: block; }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="redoc-header">
+      <label for="swagger-select" class="redoc-select-label">Select a definition</label>
+      <select id="swagger-select" v-model="selectedUrl" class="redoc-select">
+        {% raw %}
+        <option v-for="item in urls" :value="item.url" :key="item.url">
+          {{ item.name }}
+        </option>
+        {% endraw %}
+      </select>
+    </div>
+    <div style="height: 90vh;">
+      <div id="redoc-container" style="height: 100%;"></div>
+    </div>
+  </div>
+
+  <!-- Vue 3 CDN -->
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <!-- Redoc CDN -->
+  <script src="https://cdn.redoc.ly/redoc/latest/bundles/redoc.standalone.js"></script>
+  <script>
+    // URLs list provided by the backend
+    const urls = {{ urls | safe }};
+
+    // Get the primary API name from the query string
+    function getPrimaryNameFromQuery() {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('urls.primaryName');
+    }
+
+    // Set the primary API name in the query string
+    function setPrimaryNameInQuery(name) {
+      const params = new URLSearchParams(window.location.search);
+      params.set('urls.primaryName', name);
+      const newUrl = window.location.pathname + '?' + params.toString();
+      window.history.replaceState({}, '', newUrl);
+    }
+
+    const { createApp } = Vue;
+
+    createApp({
+      data() {
+        // Try to get the API name from the query string
+        const primaryName = getPrimaryNameFromQuery();
+        let selected = urls[0].url;
+        if (primaryName) {
+          const found = urls.find(u => u.name === primaryName);
+          if (found) selected = found.url;
+        }
+        return {
+          urls,
+          selectedUrl: selected
+        }
+      },
+      mounted() {
+        this.renderRedoc(this.selectedUrl);
+        // Update the query string on mount
+        const selectedName = this.urls.find(u => u.url === this.selectedUrl)?.name;
+        if (selectedName) setPrimaryNameInQuery(selectedName);
+      },
+      watch: {
+        selectedUrl(newUrl) {
+          this.renderRedoc(newUrl);
+          // Update the query string when selection changes
+          const selectedName = this.urls.find(u => u.url === newUrl)?.name;
+          if (selectedName) setPrimaryNameInQuery(selectedName);
+        }
+      },
+      methods: {
+        renderRedoc(url) {
+          const container = document.getElementById('redoc-container');
+          container.innerHTML = '';
+          window.Redoc.init(url, {}, container);
+        }
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>

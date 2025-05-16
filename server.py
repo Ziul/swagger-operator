@@ -1,11 +1,12 @@
 from fastapi import FastAPI, Request, HTTPException
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 import json
 import os
 import requests
 import logging
+import yaml
 from urllib.parse import quote, unquote
 
 logger = logging.getLogger("uvicorn.error")
@@ -21,17 +22,34 @@ templates = Jinja2Templates(directory="templates")
 @app.get("/proxy", include_in_schema=False)
 async def proxy(url: str, headers: str = None):
     """
-    Proxy endpoint to fetch the OpenAPI JSON from a given URL.
+    Proxy endpoint to fetch the OpenAPI document from a given URL (JSON or YAML).
     """
     try:
         if headers:
-            response = requests.get(url, headers=json.loads(unquote(headers)), timeout=int(os.environ.get("PROXY_TIMEOUT", 10)))
+            resp = requests.get(url, headers=json.loads(unquote(headers)), timeout=int(os.environ.get("PROXY_TIMEOUT", 10)))
         else:
-            response = requests.get(url, timeout=int(os.environ.get("PROXY_TIMEOUT", 10)))
-        return response.json()
+            resp = requests.get(url, timeout=int(os.environ.get("PROXY_TIMEOUT", 10)))
+        content_type = resp.headers.get("content-type", "")
+        # Se for JSON, repasse como application/json
+        if "json" in content_type:
+            return Response(content=resp.content, media_type="application/json")
+        # Se for YAML, repasse como text/yaml
+        elif "yaml" in content_type or "yml" in content_type:
+            return Response(content=resp.content, media_type="text/yaml")
+        # Se não souber, tente detectar pelo conteúdo
+        try:
+            json.loads(resp.text)
+            return Response(content=resp.content, media_type="application/json")
+        except Exception:
+            try:
+                yaml.safe_load(resp.text)
+                return Response(content=resp.content, media_type="text/yaml")
+            except Exception:
+                # Retorne como texto puro se não conseguir detectar
+                return Response(content=resp.content, media_type="text/plain")
     except requests.RequestException as e:
-        logger.error(f"Error fetching OpenAPI JSON: {e}")
-        raise HTTPException(status_code=500, detail={"error": "Failed to fetch OpenAPI JSON", "details": str(e)})
+        logger.error(f"Error fetching OpenAPI document: {e}")
+        raise HTTPException(status_code=500, detail={"error": "Failed to fetch OpenAPI document", "details": str(e)})
 
 def parse_headers(header_string: str) -> dict:
     headers = {}
@@ -89,8 +107,11 @@ async def docs(request: Request):
     for swagger in swaggers:
         swagger["url"] = apply_proxy_to_openapi(swagger.get("url"), parse_headers(swagger.get("header")))
 
+    interface = os.environ.get("INTERFACE", "swagger-ui").lower()
+    if interface not in ["swagger-ui", "redoc"]:
+        interface = "swagger-ui"
     return templates.TemplateResponse(
-        "swagger.html",
+        f"{interface}.html",
         {
             "request": request,
             "urls": swaggers,

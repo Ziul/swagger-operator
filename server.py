@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, Request, HTTPException, Depends
 from fastapi.responses import HTMLResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -8,6 +8,9 @@ import requests
 import logging
 import yaml
 from urllib.parse import quote, unquote
+from starlette.responses import RedirectResponse
+from authlib.integrations.starlette_client import OAuth
+from starlette.config import Config
 
 logger = logging.getLogger("uvicorn.error")
 
@@ -17,6 +20,42 @@ app = FastAPI()
 app.mount("/openapi", StaticFiles(directory="static/openapi"), name="openapi")
 # templates
 templates = Jinja2Templates(directory="templates")
+
+ENABLE_OIDC = os.environ.get("ENABLE_OIDC", "false").lower() == "true"
+
+if ENABLE_OIDC:
+    config = Config('.env')  # ou use variáveis de ambiente diretamente
+    oauth = OAuth(config)
+    oauth.register(
+        name='oidc',
+        client_id=os.environ.get("OIDC_CLIENT_ID"),
+        client_secret=os.environ.get("OIDC_CLIENT_SECRET"),
+        server_metadata_url=os.environ.get("OIDC_METADATA_URL"),
+        client_kwargs={'scope': 'openid email profile'},
+    )
+
+    async def require_login(request: Request):
+        user = request.session.get('user')
+        if not user:
+            redirect_uri = request.url_for('auth')
+            return RedirectResponse(url=redirect_uri)
+        return user
+
+    @app.route('/login')
+    async def auth(request: Request):
+        redirect_uri = request.url_for('auth_callback')
+        return await oauth.oidc.authorize_redirect(request, redirect_uri)
+
+    @app.route('/auth/callback')
+    async def auth_callback(request: Request):
+        token = await oauth.oidc.authorize_access_token(request)
+        user = await oauth.oidc.parse_id_token(request, token)
+        request.session['user'] = dict(user)
+        return RedirectResponse(url='/')
+
+else:
+    def require_login(request: Request):
+        return None
 
 
 @app.get("/proxy", include_in_schema=False)
@@ -77,7 +116,7 @@ def apply_proxy_to_openapi(openapi_url: str, header: str = None) -> str:
 
 
 @app.get("/", response_class=HTMLResponse)
-async def docs(request: Request):
+async def docs(request: Request, user=Depends(require_login)):
     """
     Main documentation page.
     """

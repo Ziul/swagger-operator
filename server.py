@@ -11,10 +11,14 @@ from urllib.parse import quote, unquote
 from starlette.responses import RedirectResponse
 from authlib.integrations.starlette_client import OAuth
 from starlette.config import Config
+from starlette.middleware.sessions import SessionMiddleware
+from fastapi import HTTPException, status
 
 logger = logging.getLogger("uvicorn.error")
 
 app = FastAPI()
+app.add_middleware(SessionMiddleware, secret_key="some-random-string", max_age=None)
+
 
 # static files
 app.mount("/openapi", StaticFiles(directory="static/openapi"), name="openapi")
@@ -22,9 +26,11 @@ app.mount("/openapi", StaticFiles(directory="static/openapi"), name="openapi")
 templates = Jinja2Templates(directory="templates")
 
 ENABLE_OIDC = os.environ.get("ENABLE_OIDC", "false").lower() == "true"
+AUTH_CALLBACK = os.environ.get("AUTH_CALLBACK", None)
+
 
 if ENABLE_OIDC:
-    config = Config('.env')  # ou use variáveis de ambiente diretamente
+    config = Config()  # ou use variáveis de ambiente diretamente
     oauth = OAuth(config)
     oauth.register(
         name='oidc',
@@ -37,20 +43,21 @@ if ENABLE_OIDC:
     async def require_login(request: Request):
         user = request.session.get('user')
         if not user:
-            redirect_uri = request.url_for('auth')
-            return RedirectResponse(url=redirect_uri)
+            raise HTTPException(
+                status_code=status.HTTP_307_TEMPORARY_REDIRECT,
+                headers={"Location": "/login"}
+            )
         return user
 
     @app.route('/login')
     async def auth(request: Request):
-        redirect_uri = request.url_for('auth_callback')
+        redirect_uri = AUTH_CALLBACK or request.url_for('auth_callback')
         return await oauth.oidc.authorize_redirect(request, redirect_uri)
 
     @app.route('/auth/callback')
     async def auth_callback(request: Request):
         token = await oauth.oidc.authorize_access_token(request)
-        user = await oauth.oidc.parse_id_token(request, token)
-        request.session['user'] = dict(user)
+        request.session['user'] = dict(token['userinfo'])
         return RedirectResponse(url='/')
 
 else:

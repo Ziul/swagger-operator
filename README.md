@@ -79,6 +79,30 @@ Expose the operator service (default port: 80) and access `/` to see the aggrega
 - `TITLE` (default: `API Documentation`)
 - `INTERFACE` (default: `swagger-ui`, choices: `redoc`, `swagger-ui`)
 
+## Configuring OpenID Connect (OIDC) Authentication
+
+To enable OpenID Connect (OIDC) authentication in your application, you need to set the following environment variables. These variables allow your application to interact with an OIDC-compliant identity provider for secure user authentication and authorization.
+
+Required Environment Variables:
+
+ENABLE_OIDC: Flag to enable or disable OIDC authentication.
+
+OIDC_CLIENT_ID: The client identifier issued to your application by the OIDC provider during registration.
+
+OIDC_CLIENT_SECRET: The client secret issued to your application by the OIDC provider during registration.
+
+OIDC_METADATA_URL: The URL where your application can retrieve the OIDC provider's configuration, including endpoints and public keys.
+
+AUTH_CALLBACK: The callback URL in your application where the OIDC provider will redirect users after authentication.
+
+```
+ENABLE_OIDC=true
+OIDC_CLIENT_ID=your-client-id
+OIDC_CLIENT_SECRET=your-client-secret
+OIDC_METADATA_URL=https://your-oidc-provider.com/.well-known/openid-configuration
+AUTH_CALLBACK=https://your-app.com/auth/callback
+```
+
 ## Development
 
 Install dependencies with Poetry:

@@ -60,3 +60,14 @@ Create the name of the service account to use
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
 {{- end }}
+
+{{/*
+Create the name of the sso secret
+*/}}
+{{- define "swagger-admin.ssoSecretName" -}}
+{{- if and .Values.sso.enabled .Values.sso.existingSecret }}
+{{- default "default" .Values.sso.existingSecret }}
+{{- else }}
+{{- printf "%s-%s" (include "swagger-admin.fullname" .) "sso" }}
+{{- end }}
+{{- end }}

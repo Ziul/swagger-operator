@@ -94,3 +94,11 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
+
+sso:
+  enabled: false
+  existingSecret: ""
+  metadataUrl: ""
+  clientSecret: ""
+  clientID: ""
+  authCallback: ""

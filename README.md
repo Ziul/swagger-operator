@@ -1,5 +1,11 @@
 # Swagger Operator
 
+[![Build Status](https://github.com/Ziul/swagger-operator/actions/workflows/cicd.yaml/badge.svg)](https://github.com/Ziul/swagger-operator/actions)
+[![Latest Release](https://img.shields.io/github/v/release/Ziul/swagger-operator?label=release&color=blue)](https://github.com/Ziul/swagger-operator/releases)
+[![Docker Pulls](https://img.shields.io/docker/pulls/ziuloliveira/swagger-operator)](https://hub.docker.com/r/ziuloliveira/swagger-operator)
+[![License](https://img.shields.io/github/license/Ziul/swagger-operator)](https://github.com/Ziul/swagger-operator/blob/main/LICENSE)
+
+
 A Kubernetes operator that automatically discovers services annotated with OpenAPI/Swagger documentation and aggregates their documentation in a single UI.
 
 ## Features
@@ -71,31 +77,34 @@ Expose the operator service (default port: 80) and access `/` to see the aggrega
 
 ## Environment Variables
 
-- `SWAGGER_OPERATOR_PATH_KEY` (default: `swagger-operator-path`)
-- `SWAGGER_OPERATOR_NAME_KEY` (default: `swagger-operator-name`)
-- `SWAGGER_OPERATOR_PORT_KEY` (default: `swagger-operator-port`)
-- `SWAGGER_OPERATOR_HEADER_KEY` (default: `swagger-operator-header`)
-- `PROXY_TIMEOUT` (default: `10`)
-- `TITLE` (default: `API Documentation`)
-- `INTERFACE` (default: `swagger-ui`, choices: `redoc`, `swagger-ui`)
+| Variable                        | Default                     | Description                                                                 |
+|----------------------------------|-----------------------------|-----------------------------------------------------------------------------|
+| `SWAGGER_OPERATOR_PATH_KEY`      | `swagger-operator-path`     | Annotation key for the OpenAPI path.                                        |
+| `SWAGGER_OPERATOR_NAME_KEY`      | `swagger-operator-name`     | Annotation key for the service display name.                                |
+| `SWAGGER_OPERATOR_PORT_KEY`      | `swagger-operator-port`     | Annotation key for the service port.                                        |
+| `SWAGGER_OPERATOR_HEADER_KEY`    | `swagger-operator-header`   | Annotation key for extra headers.                                           |
+| `PROXY_TIMEOUT`                  | `10`                        | Timeout for proxy requests (in seconds).                                    |
+| `ENABLE_OIDC`                    | `false`                     | Enables (`true`) or disables (`false`) OIDC authentication.                 |
+| `TITLE`                          | `API Documentation`         | Title for the Swagger UI.                                                   |
+| `INTERFACE`                      | `swagger-ui`                | UI interface (`swagger-ui` or `redoc`).                                     |
 
-## Configuring OpenID Connect (OIDC) Authentication
+## OpenID Connect (OIDC) Authentication Configuration
 
-To enable OpenID Connect (OIDC) authentication in your application, you need to set the following environment variables. These variables allow your application to interact with an OIDC-compliant identity provider for secure user authentication and authorization.
+To enable authentication via OpenID Connect (OIDC), set the following environment variables. These allow your application to interact with an OIDC-compliant identity provider for secure authentication and authorization.
 
-Required Environment Variables:
+### Required Environment Variables
 
-ENABLE_OIDC: Flag to enable or disable OIDC authentication.
+| Variable              | Description                                                                                 |
+|-----------------------|--------------------------------------------------------------------------------------------|
+| `ENABLE_OIDC`         | Enables (`true`) or disables (`false`) OIDC authentication.                                |
+| `OIDC_CLIENT_ID`      | Client ID provided by the OIDC provider during registration.                               |
+| `OIDC_CLIENT_SECRET`  | Client secret provided by the OIDC provider during registration.                           |
+| `OIDC_METADATA_URL`   | URL to fetch the OIDC provider configuration (endpoints, public keys, etc.).               |
+| `AUTH_CALLBACK`       | Callback URL where the OIDC provider will redirect after authentication.                   |
 
-OIDC_CLIENT_ID: The client identifier issued to your application by the OIDC provider during registration.
+#### Example configuration
 
-OIDC_CLIENT_SECRET: The client secret issued to your application by the OIDC provider during registration.
-
-OIDC_METADATA_URL: The URL where your application can retrieve the OIDC provider's configuration, including endpoints and public keys.
-
-AUTH_CALLBACK: The callback URL in your application where the OIDC provider will redirect users after authentication.
-
-```
+```env
 ENABLE_OIDC=true
 OIDC_CLIENT_ID=your-client-id
 OIDC_CLIENT_SECRET=your-client-secret
@@ -129,4 +138,4 @@ MIT License
 
 ---
 
-Made with ❤️ by [Luiz Oliveira](https://github.com/ziul) and [Gustavo Coelho](https://github.com/gutorc92)
+Made with ❤️ by [Luiz Oliveira](https://github.com/ziul) and [Gustavo Coelho](https://github.com/gutorc92).

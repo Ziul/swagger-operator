@@ -39,7 +39,6 @@ jobs:
       - name: Docker Login
         uses: docker/login-action@v3
         env:
-          ACTIONS_STEP_DEBUG: true
           DOCKER_REGISTRY: ${{ secrets.DOCKER_REGISTRY }}
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         with:

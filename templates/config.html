@@ -5,21 +5,67 @@
 </head>
 <body>
     <h1>{{ title }}</h1>
-    <table border="1">
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>URL</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for swagger in urls %}
-            <tr>
-                <td><pre>{{ swagger.name }}</pre></td>
-                <td><pre>{{ swagger.url }}</pre></td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+
+
+    <details>
+        <summary><strong>Configured APIs</strong> ({{ urls|length }})</summary>
+        <table border="1">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>URL</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for swagger in urls %}
+                <tr>
+                    <td><pre>{{ swagger.name }}</pre></td>
+                    <td><pre>{{ swagger.url }}</pre></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </details>
+
+
+    <details>
+        <summary><strong>Settings</strong> ({{ settings|length }})</summary>
+        <table border="1">
+            <thead>
+                <tr><th>Key</th><th>Value</th></tr>
+            </thead>
+            <tbody>
+                {% for key, value in settings.items() %}
+                <tr>
+                    <td>{{ key }}</td>
+                    <td><pre>{{ value }}</pre></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </details>
+
+
+    <details>
+        <summary><strong>Session</strong> ({{ session|length if session else 0 }})</summary>
+        {% if session %}
+            <table border="1">
+                <thead>
+                    <tr><th>Key</th><th>Value</th></tr>
+                </thead>
+                <tbody>
+                    {% for key, value in session.items() %}
+                    <tr>
+                        <td>{{ key }}</td>
+                        <td><pre>{{ value | tojson(indent=2) }}</pre></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p><em>Session is empty.</em></p>
+        {% endif %}
+    </details>
+
 </body>
 </html>

@@ -62,7 +62,8 @@ if ENABLE_OIDC:
 
 else:
     def require_login(request: Request):
-        return None
+        request.session['user'] = "anonymous"
+        return request.session['user']
 
 
 @app.get("/proxy", include_in_schema=False)
@@ -123,7 +124,7 @@ def apply_proxy_to_openapi(openapi_url: str, header: str = None) -> str:
 
 
 @app.get("/", response_class=HTMLResponse)
-async def docs(request: Request, user=Depends(require_login)):
+async def docs(request: Request, template:str=None, user=Depends(require_login)):
     """
     Main documentation page.
     """
@@ -153,6 +154,15 @@ async def docs(request: Request, user=Depends(require_login)):
     for swagger in swaggers:
         swagger["url"] = apply_proxy_to_openapi(swagger.get("url"), parse_headers(swagger.get("header")))
 
+    if template and template.lower() in ["redoc", "swagger-ui"]:
+        return templates.TemplateResponse(
+            f"{template.lower()}.html",
+            {
+                "request": request,
+                "urls": swaggers,
+                "title": os.environ.get("TITLE", "API Documentation"),
+            }
+        )
     interface = os.environ.get("INTERFACE", "swagger-ui").lower()
     if interface not in ["swagger-ui", "redoc"]:
         interface = "swagger-ui"
@@ -173,15 +183,7 @@ async def config(request: Request):
     try:
         with open('static/openapi/urls.json') as f:
             swaggers = json.load(f)
-    except FileNotFoundError:
-        swaggers = [
-            {
-                "url": "/openapi.json",
-                "name": "Swagger Aggregator",
-                "header": "",
-            }
-        ]
-    except json.JSONDecodeError:
+    except:
         swaggers = [
             {
                 "url": "/openapi.json",
@@ -196,5 +198,17 @@ async def config(request: Request):
             "request": request,
             "urls": swaggers,
             "title": os.environ.get("TITLE", "API Documentation - Config"),
+            "session": request.session,
+            "settings": {
+                "enable_oidc": ENABLE_OIDC,
+                "oidc_client_id": os.environ.get("OIDC_CLIENT_ID"),
+                "oidc_metadata_url": os.environ.get("OIDC_METADATA_URL"),
+                "interface": os.environ.get("INTERFACE", "swagger-ui").lower(),
+                "path_key": os.environ.get("SWAGGER_OPERATOR_PATH_KEY", "swagger-operator-path"),
+                "name_key": os.environ.get("SWAGGER_OPERATOR_NAME_KEY", "swagger-operator-name"),
+                "port_key": os.environ.get("SWAGGER_OPERATOR_PORT_KEY", "swagger-operator-port"),
+                "header_key": os.environ.get("SWAGGER_OPERATOR_HEADER_KEY", "swagger-operator-header"),
+                "proxy_timeout": os.environ.get("PROXY_TIMEOUT", 10),
+            }
         }
     )

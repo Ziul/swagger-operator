@@ -89,7 +89,7 @@ jobs:
         run: |
           helm package ./charts/swagger-operator \
             --app-version ${{ needs.versioning.outputs.MajorMinorPatch }} \
-            --version ${{ needs.versioning.outputs.MajorMinorPatch }}-chart
+            --version ${{ needs.versioning.outputs.MajorMinorPatch }}
           mkdir -p helm-charts
           mv swagger-operator-*.tgz helm-charts/
 

@@ -24,6 +24,7 @@ jobs:
       - name: Pytest
         run: |
           pip install poetry
-          poetry export -f requirements.txt --output requirements.txt --with dev
-          pip install -r requirements.txt
-          pytest
+          poetry install
+          export PYTHONPATH=$(pwd)
+          mkdir -p static/openapi
+          poetry run pytest

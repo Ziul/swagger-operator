@@ -4,7 +4,8 @@
 [![Latest Release](https://img.shields.io/github/v/release/Ziul/swagger-operator?label=release&color=blue)](https://github.com/Ziul/swagger-operator/releases)
 [![Docker Pulls](https://img.shields.io/docker/pulls/ziuloliveira/swagger-operator)](https://hub.docker.com/r/ziuloliveira/swagger-operator)
 [![License](https://img.shields.io/github/license/Ziul/swagger-operator)](https://github.com/Ziul/swagger-operator/blob/main/LICENSE)
-
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+[![security: bandit](https://img.shields.io/badge/security-bandit-yellow.svg)](https://github.com/PyCQA/bandit)
 
 A Kubernetes operator that automatically discovers services annotated with OpenAPI/Swagger documentation and aggregates their documentation in a single UI.
 

@@ -1,8 +1,8 @@
 [tool.poetry]
 name = "swagger-operator"
-version = "0.1.0"
+version = "0.2.0"
 description = ""
-authors = ["Luiz Oliveira"]
+authors = ["Luiz Oliveira", "Gustavo Coelho"]
 license = "MIT"
 readme = "README.md"
 
@@ -18,7 +18,18 @@ itsdangerous = "^2.2.0"
 
 [tool.poetry.group.dev.dependencies]
 ipdb = "^0.13.13"
+pytest = "^8.3.5"
+pytest-asyncio = "^0.26.0"
+pytest-cov = "^6.1.1"
+httpx = "^0.28.1"
+bandit = "^1.8.3"
+ruff = "^0.11.10"
+pre-commit = "^4.2.0"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.bandit]
+exclude_dirs = ["tests", ".git", ".venv", ".github"]
+skips = ["B101", "B113"]

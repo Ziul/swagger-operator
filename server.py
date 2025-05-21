@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request, HTTPException, Depends
+from fastapi import FastAPI, Request, HTTPException, Depends, status
 from fastapi.responses import HTMLResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -12,12 +12,12 @@ from starlette.responses import RedirectResponse
 from authlib.integrations.starlette_client import OAuth
 from starlette.config import Config
 from starlette.middleware.sessions import SessionMiddleware
-from fastapi import HTTPException, status
+import secrets
 
 logger = logging.getLogger("uvicorn.error")
 
 app = FastAPI()
-app.add_middleware(SessionMiddleware, secret_key="some-random-string", max_age=None)
+app.add_middleware(SessionMiddleware, secret_key=secrets.token_urlsafe(32), max_age=None)
 
 
 # static files
@@ -27,11 +27,11 @@ templates = Jinja2Templates(directory="templates")
 
 ENABLE_OIDC = os.environ.get("ENABLE_OIDC", "false").lower() == "true"
 AUTH_CALLBACK = os.environ.get("AUTH_CALLBACK", None)
+config = Config()  # ou use variáveis de ambiente diretamente
+oauth = OAuth(config)
 
 
 if ENABLE_OIDC:
-    config = Config()  # ou use variáveis de ambiente diretamente
-    oauth = OAuth(config)
     oauth.register(
         name='oidc',
         client_id=os.environ.get("OIDC_CLIENT_ID"),
@@ -134,6 +134,7 @@ async def docs(request: Request, template:str=None, user=Depends(require_login))
             logger.info(f"Loaded {len(swaggers)} URLs.")
     except FileNotFoundError:
         logger.error("File not found: static/openapi/urls.json")
+        request.session['error'] = "File not found: static/openapi/urls.json"
         swaggers = [
             {
                 "url": "/openapi.json",
@@ -143,6 +144,7 @@ async def docs(request: Request, template:str=None, user=Depends(require_login))
         ]
     except json.JSONDecodeError:
         logger.error("Error decoding JSON from static/openapi/urls.json")
+        request.session['error'] = "Error decoding JSON from static/openapi/urls.json"
         swaggers = [
             {
                 "url": "/openapi.json",
@@ -183,14 +185,10 @@ async def config(request: Request):
     try:
         with open('static/openapi/urls.json') as f:
             swaggers = json.load(f)
-    except:
-        swaggers = [
-            {
-                "url": "/openapi.json",
-                "name": "Swagger Aggregator",
-                "header": "",
-            }
-        ]
+    except Exception as e:
+        logger.error(f"Error loading configuration file: {e}")
+        swaggers = []
+        request.session['error'] = "Error loading configuration file."
 
     return templates.TemplateResponse(
         "config.html",

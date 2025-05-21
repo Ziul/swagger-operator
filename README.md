@@ -28,15 +28,7 @@ A Kubernetes operator that automatically discovers services annotated with OpenA
 
 ### 1. Install with Helm (recommended)
 
-You can install the Swagger Operator easily using the Helm Chart available on Docker Hub:
-
-```bash
-helm install swagger oci://registry-1.docker.io/ziuloliveira/swagger-operator --version <DESIRED_VERSION>-chart
-```
-
-Replace `<DESIRED_VERSION>` with the desired release version.
-
-Or you can use the one stored in our GH pages:
+You can install the Swagger Operator easily using the Helm Chart available on our GH pages:
 
 ```bash
 helm repo add swagger-operator https://ziul.github.io/swagger-operator/

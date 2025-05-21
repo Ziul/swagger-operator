@@ -261,4 +261,3 @@ Dockerfile
 .dockerignore
 .gitignore
 .pre-commit-config.yaml
-*.md

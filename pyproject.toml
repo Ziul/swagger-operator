@@ -29,3 +29,7 @@ pre-commit = "^4.2.0"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.bandit]
+exclude_dirs = ["tests", ".git", ".venv", ".github"]
+skips = ["B101", "B113"]

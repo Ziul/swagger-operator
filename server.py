@@ -12,11 +12,12 @@ from starlette.responses import RedirectResponse
 from authlib.integrations.starlette_client import OAuth
 from starlette.config import Config
 from starlette.middleware.sessions import SessionMiddleware
+import secrets
 
 logger = logging.getLogger("uvicorn.error")
 
 app = FastAPI()
-app.add_middleware(SessionMiddleware, secret_key="some-random-string", max_age=None)
+app.add_middleware(SessionMiddleware, secret_key=secrets.token_urlsafe(32), max_age=None)
 
 
 # static files

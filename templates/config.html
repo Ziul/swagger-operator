@@ -5,7 +5,7 @@
 </head>
 <body>
     <h1>
-        {{ title }}{% if version %} - v{{ version }}{% endif %}
+        {{ title }}{% if version %} - v{{ version }}{% endif %} {% if compiling_version %} ({{ compiling_version }}){% endif %}
     </h1>
 
 

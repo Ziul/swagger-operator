@@ -197,6 +197,7 @@ async def config(request: Request):
             "urls": swaggers,
             "title": os.environ.get("TITLE", "Swagger Operator"),
             "version": os.environ.get("SWAGGER_OPERATOR_VERSION", ""),
+            "compiling_version": os.environ.get("APP_VERSION", ""),
             "session": request.session,
             "settings": {
                 "enable_oidc": ENABLE_OIDC,

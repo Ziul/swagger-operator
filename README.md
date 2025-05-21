@@ -36,6 +36,14 @@ helm install swagger oci://registry-1.docker.io/ziuloliveira/swagger-operator --
 
 Replace `<DESIRED_VERSION>` with the desired release version.
 
+Or you can use the one stored in our GH pages:
+
+```bash
+helm repo add swagger-operator https://ziul.github.io/swagger-operator/
+helm repo update
+helm install my-release swagger-operator/swagger-operator
+```
+
 ### 2. Clone the repository (optional)
 
 If you prefer, clone the repository for customization or local development:

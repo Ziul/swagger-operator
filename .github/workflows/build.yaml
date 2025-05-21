@@ -88,6 +88,7 @@ jobs:
       - name: Copy new chart to gh-pages
         run: |
           cp helm-charts/*.tgz gh-pages/
+          cp README.md gh-pages/
           cd gh-pages
           helm repo index . --url https://ziul.github.io/swagger-operator/
 

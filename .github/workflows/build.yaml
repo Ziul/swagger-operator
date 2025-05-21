@@ -63,7 +63,7 @@ jobs:
   build-helm:
     name: Helm Build & Publish to GitHub Pages
     runs-on: ubuntu-latest
-    needs: [build-docker]
+    needs: [versioning, build-docker]
     if: github.ref_name == 'main' || github.event_name == 'release'
     steps:
       - uses: actions/checkout@v4

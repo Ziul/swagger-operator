@@ -1,0 +1,14 @@
+apiVersion: v1
+entries:
+  swagger-operator:
+  - apiVersion: v2
+    appVersion: 0.2.1
+    created: "2025-05-21T15:18:47.198196575Z"
+    description: A Helm chart for Kubernetes
+    digest: 06b4e0e583f734ce3df5e5d3af5fa573355df06ac5cb14aa49656b21757354c0
+    name: swagger-operator
+    type: application
+    urls:
+    - https://ziul.github.io/swagger-operator/swagger-operator-0.2.1-chart.tgz
+    version: 0.2.1-chart
+generated: "2025-05-21T15:18:47.197640532Z"

@@ -65,18 +65,21 @@ spec:
             - secretRef:
                 name: {{ include "swagger-admin.ssoSecretName" . }}
           {{- end }}
+          env:
+            - name: SWAGGER_OPERATOR_VERSION
+              value: {{ .Values.image.tag | default .Chart.AppVersion }}
           ports:
             - name: http
               containerPort: {{ .Values.service.containerPort }}
               protocol: TCP
-          # livenessProbe:
-          #   httpGet:
-          #     path: /
-          #     port: http
-          # readinessProbe:
-          #   httpGet:
-          #     path: /
-          #     port: http
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           {{- with .Values.volumeMounts }}

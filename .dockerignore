@@ -253,3 +253,8 @@ static/
 helm/
 .git/
 .github/
+charts/
+*.tgz
+tests/
+*.ini
+Dockerfile

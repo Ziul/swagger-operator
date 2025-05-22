@@ -6,7 +6,6 @@ import json
 import os
 import requests
 import logging
-import yaml
 from urllib.parse import quote, unquote
 from starlette.responses import RedirectResponse
 from authlib.integrations.starlette_client import OAuth
@@ -67,7 +66,7 @@ else:
 
 
 @app.get("/proxy", include_in_schema=False)
-async def proxy(url: str, headers: str = None):
+async def proxy(url: str, headers: str = None, user=Depends(require_login)):
     """
     Proxy endpoint to fetch the OpenAPI document from a given URL (JSON or YAML).
     """
@@ -83,17 +82,8 @@ async def proxy(url: str, headers: str = None):
         # Se for YAML, repasse como text/yaml
         elif "yaml" in content_type or "yml" in content_type:
             return Response(content=resp.content, media_type="text/yaml")
-        # Se não souber, tente detectar pelo conteúdo
-        try:
-            json.loads(resp.text)
-            return Response(content=resp.content, media_type="application/json")
-        except Exception:
-            try:
-                yaml.safe_load(resp.text)
-                return Response(content=resp.content, media_type="text/yaml")
-            except Exception:
-                # Retorne como texto puro se não conseguir detectar
-                return Response(content=resp.content, media_type="text/plain")
+        else:
+            raise HTTPException(status_code=400, detail="Unsupported content type")
     except requests.RequestException as e:
         logger.error(f"Error fetching OpenAPI document: {e}")
         raise HTTPException(status_code=500, detail={"error": "Failed to fetch OpenAPI document", "details": str(e)})
@@ -178,7 +168,7 @@ async def docs(request: Request, template:str=None, user=Depends(require_login))
     )
 
 @app.get("/config", response_class=HTMLResponse, include_in_schema=False)
-async def config(request: Request):
+async def config(request: Request, user=Depends(require_login)):
     """
     Configuration page for the OpenAPI URLs.
     """

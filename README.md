@@ -9,26 +9,31 @@
 
 A Kubernetes operator that automatically discovers services annotated with OpenAPI/Swagger documentation and aggregates their documentation in a single UI.
 
+
+## Table of Contents
+
+- [Features](#features)
+- [Getting Started (Helm)](#getting-started-helm)
+- [How to Annotate Your Services](#how-to-annotate-your-services)
+- [Accessing the UI](#accessing-the-ui)
+- [Configuration & Customization](#configuration--customization)
+  - [Environment Variables](#environment-variables)
+  - [OIDC Authentication (SSO)](#oidc-authentication-sso)
+- [Local Development](#local-development)
+- [License](#license)
+
+
 ## Features
 
 - Watches Kubernetes services for specific annotations.
 - Aggregates OpenAPI/Swagger endpoints from discovered services.
-- Serves a dynamic Swagger UI using FastAPI.
-- Easy deployment with Docker or Helm.
+- Serves a dynamic Swagger UI or Redoc using FastAPI.
+- Easy deployment with Helm.
 
-## Requirements
 
-- Python 3.10+
-- Kubernetes cluster
-- Docker (for containerization)
-- [Poetry](https://python-poetry.org/) for dependency management
-- [Helm](https://helm.sh/) (optional, for easy installation)
+## Getting Started (Helm)
 
-## Getting Started
-
-### 1. Install with Helm (recommended)
-
-You can install the Swagger Operator easily using the Helm Chart available on our GH pages:
+Install the Swagger Operator using the Helm Chart:
 
 ```bash
 helm repo add swagger-operator https://ziul.github.io/swagger-operator/
@@ -36,28 +41,10 @@ helm repo update
 helm install my-release swagger-operator/swagger-operator
 ```
 
-### 2. Clone the repository (optional)
 
-If you prefer, clone the repository for customization or local development:
+### How to Annotate Your Services
 
-```bash
-git clone https://github.com/ziuloliveira/swagger-operator.git
-cd swagger-operator
-```
-
-### 3. Build the Docker image
-
-```bash
-docker build -t swagger-operator:latest .
-```
-
-### 4. Deploy to Kubernetes
-
-You can deploy the operator as a Deployment in your cluster. Make sure to set the required environment variables if you want to customize annotation keys and a service account with permissions to watch `services` events.
-
-### 5. Annotate your services
-
-Add the following annotation to your Kubernetes services:
+Add the following annotations to your Kubernetes services:
 
 ```yaml
 metadata:
@@ -72,11 +59,18 @@ metadata:
     # (Optional) Extra headers
 ```
 
-### 6. Access the Swagger UI
+
+### Accessing the UI
 
 Expose the operator service (default port: 80) and access `/` to see the aggregated documentation.
 
-## Environment Variables
+---
+
+## Configuration & Customization
+
+### Environment Variables
+
+You can customize the operator's behavior via environment variables:
 
 | Variable                        | Default                     | Description                                                                 |
 |----------------------------------|-----------------------------|-----------------------------------------------------------------------------|
@@ -86,52 +80,100 @@ Expose the operator service (default port: 80) and access `/` to see the aggrega
 | `SWAGGER_OPERATOR_HEADER_KEY`    | `swagger-operator-header`   | Annotation key for extra headers.                                           |
 | `PROXY_TIMEOUT`                  | `10`                        | Timeout for proxy requests (in seconds).                                    |
 | `ENABLE_OIDC`                    | `false`                     | Enables (`true`) or disables (`false`) OIDC authentication.                 |
-| `TITLE`                          | `API Documentation`         | Title for the Swagger UI.                                                   |
+| `TITLE`                          | `API Documentation`         | Title for the UI.                                                           |
 | `INTERFACE`                      | `swagger-ui`                | UI interface (`swagger-ui` or `redoc`).                                     |
 
-## OpenID Connect (OIDC) Authentication Configuration
 
-To enable authentication via OpenID Connect (OIDC), set the following environment variables. These allow your application to interact with an OIDC-compliant identity provider for secure authentication and authorization.
+### OIDC Authentication (SSO)
 
-### Required Environment Variables
+By default, SSO is configured through the Helm chart. The following values can be set in your `values.yaml`:
 
-| Variable              | Description                                                                                 |
-|-----------------------|--------------------------------------------------------------------------------------------|
-| `ENABLE_OIDC`         | Enables (`true`) or disables (`false`) OIDC authentication.                                |
-| `OIDC_CLIENT_ID`      | Client ID provided by the OIDC provider during registration.                               |
-| `OIDC_CLIENT_SECRET`  | Client secret provided by the OIDC provider during registration.                           |
-| `OIDC_METADATA_URL`   | URL to fetch the OIDC provider configuration (endpoints, public keys, etc.).               |
-| `AUTH_CALLBACK`       | Callback URL where the OIDC provider will redirect after authentication.                   |
-
-#### Example configuration
-
-```env
-ENABLE_OIDC=true
-OIDC_CLIENT_ID=your-client-id
-OIDC_CLIENT_SECRET=your-client-secret
-OIDC_METADATA_URL=https://your-oidc-provider.com/.well-known/openid-configuration
-AUTH_CALLBACK=https://your-app.com/auth/callback
+```yaml
+sso:
+  enabled: false
+  existingSecret: ""
+  metadataUrl: ""
+  clientSecret: ""
+  clientID: ""
+  authCallback: ""
 ```
 
-## Development
+You have two options to configure SSO:
 
-Install dependencies with Poetry:
+#### 1. Using an existing Kubernetes Secret
 
-```bash
-poetry install
+Set `sso.existingSecret` to the name of your secret. The Secret must contain the following fields:
+
+- `OIDC_CLIENT_SECRET`
+- `ENABLE_OIDC`
+- `OIDC_METADATA_URL`
+- `OIDC_CLIENT_ID`
+- `AUTH_CALLBACK`
+
+**Example:**
+
+```yaml
+sso:
+  enabled: true
+  existingSecret: your-secret-name
 ```
 
-Run the FastAPI server locally:
+**Example Secret:**
 
-```bash
-poetry run fastapi run server.py
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: your-secret-name
+type: Opaque
+stringData:
+  OIDC_CLIENT_SECRET: your-client-secret
+  ENABLE_OIDC: "true"
+  OIDC_METADATA_URL: https://your-oidc-provider.com/.well-known/openid-configuration
+  OIDC_CLIENT_ID: your-client-id
+  AUTH_CALLBACK: https://your-app.com/auth/callback
 ```
 
-Or run the operator:
+#### 2. Setting values directly in the Helm chart
 
-```bash
-poetry run kopf run controller.py
+Alternatively, you can provide the SSO configuration directly in your `values.yaml`:
+
+```yaml
+sso:
+  enabled: true
+  existingSecret: ""
+  metadataUrl: https://your-oidc-provider.com/.well-known/openid-configuration
+  clientSecret: your-client-secret
+  clientID: your-client-id
+  authCallback: https://your-app.com/auth/callback
 ```
+
+If both `existingSecret` and the direct values are provided, the operator will prioritize the existing secret.
+
+---
+
+## Local Development
+
+For local development:
+
+1. Install dependencies with [Poetry](https://python-poetry.org/):
+
+    ```bash
+    poetry install
+    ```
+
+2. Run the FastAPI server locally:
+
+    ```bash
+    poetry run fastapi run server.py
+    ```
+
+3. Run the operator:
+
+    ```bash
+    poetry run kopf run controller.py
+    ```
+
 
 ## License
 

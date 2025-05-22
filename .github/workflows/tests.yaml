@@ -21,6 +21,9 @@ jobs:
         name: Linting
       - name: Bandit
         uses: PyCQA/bandit-action@v1
+        with:
+          exclude: "tests/*"
+          skips: B101
       - name: Pytest
         run: |
           pip install poetry

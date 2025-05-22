@@ -14,7 +14,7 @@ def configure(memo: kopf.Memo, **_):
 async def cleanup_fn(logger, **kwargs):
     logger.info("Cleaning up resources...")
 
-@kopf.on.event('v1', 'services', 
+@kopf.on.event('v1', 'services',
                 annotations={os.environ.get('SWAGGER_OPERATOR_PATH_KEY', 'swagger-operator-path'):kopf.PRESENT},
                )
 def service_event(event, memo: kopf.Memo, logger, **kwargs):
@@ -34,7 +34,7 @@ def service_event(event, memo: kopf.Memo, logger, **kwargs):
     if not application_url.netloc:
         if not application_url.path.startswith('/'):
             application_url = urlparse(f"/{application_url.path}")
-        application_url = urlparse(f"http://{service_name}.{namespace}.svc.cluster.local:{application_port}{application_path}")
+        application_url = urlparse(f"http://{service_name}.{namespace}.svc.cluster.local:{application_port}{application_url.path}")
 
 
 

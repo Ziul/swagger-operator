@@ -22,7 +22,7 @@ jobs:
       - name: Bandit
         uses: PyCQA/bandit-action@v1
         with:
-          configfile: "-c pyproject.toml"
+          configfile: "pyproject.toml"
       - name: Pytest
         run: |
           pip install poetry

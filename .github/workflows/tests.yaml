@@ -22,7 +22,7 @@ jobs:
       - name: Bandit
         uses: PyCQA/bandit-action@v1
         with:
-          exclude: "tests/*"
+          exclude: "tests,charts"
           skips: B101
       - name: Pytest
         run: |

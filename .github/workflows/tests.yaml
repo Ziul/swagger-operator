@@ -22,8 +22,7 @@ jobs:
       - name: Bandit
         uses: PyCQA/bandit-action@v1
         with:
-          exclude: "tests/*"
-          skips: B101
+          configfile: "-c pyproject.toml"
       - name: Pytest
         run: |
           pip install poetry

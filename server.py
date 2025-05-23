@@ -6,7 +6,6 @@ import json
 import os
 import requests
 import logging
-from urllib.parse import quote, unquote
 from starlette.responses import RedirectResponse
 from authlib.integrations.starlette_client import OAuth
 from starlette.config import Config
@@ -64,29 +63,29 @@ else:
         request.session['user'] = "anonymous"
         return request.session['user']
 
-
-@app.get("/proxy", include_in_schema=False)
-async def proxy(url: str, headers: str = None, user=Depends(require_login)):
-    """
-    Proxy endpoint to fetch the OpenAPI document from a given URL (JSON or YAML).
-    """
-    try:
-        if headers:
-            resp = requests.get(url, headers=json.loads(unquote(headers)), timeout=int(os.environ.get("PROXY_TIMEOUT", 10)))
-        else:
-            resp = requests.get(url, timeout=int(os.environ.get("PROXY_TIMEOUT", 10)))
-        content_type = resp.headers.get("content-type", "")
-        # Se for JSON, repasse como application/json
-        if "json" in content_type:
-            return Response(content=resp.content, media_type="application/json")
-        # Se for YAML, repasse como text/yaml
-        elif "yaml" in content_type or "yml" in content_type:
-            return Response(content=resp.content, media_type="text/yaml")
-        else:
-            raise HTTPException(status_code=400, detail="Unsupported content type")
-    except requests.RequestException as e:
-        logger.error(f"Error fetching OpenAPI document: {e}")
-        raise HTTPException(status_code=500, detail={"error": "Failed to fetch OpenAPI document", "details": str(e)})
+@app.get("/services/{name}", response_class=HTMLResponse, include_in_schema=False)
+async def services(request: Request, name: str, user=Depends(require_login)):
+    with open('static/openapi/services.json', 'r') as f:
+        services = json.load(f)
+        logger.info(f"Loaded {len(services)} services.")
+    if name not in services:
+        logger.error(f"Service {name} not found.")
+        raise HTTPException(status_code=404, detail="Service not found")
+    service = services[name]
+    if not service:
+        logger.error(f"Service {name} not found.")
+        raise HTTPException(status_code=404, detail="Service not found")
+    resp = requests.get(service['url'], timeout=int(os.environ.get("PROXY_TIMEOUT", 10)), headers=parse_headers(service.get("header")))
+    content_type = resp.headers.get("content-type", "")
+    # Se for JSON, repasse como application/json
+    if "json" in content_type:
+        return Response(content=resp.content, media_type="application/json")
+    # Se for YAML, repasse como text/yaml
+    elif "yaml" in content_type or "yml" in content_type:
+        return Response(content=resp.content, media_type="text/yaml")
+    else:
+        logger.error(f"Unsupported content type: {content_type}")
+        raise HTTPException(status_code=400, detail="Unsupported content type")
 
 def parse_headers(header_string: str) -> dict:
     headers = {}
@@ -100,72 +99,50 @@ def parse_headers(header_string: str) -> dict:
     return headers
 
 
-def apply_proxy_to_openapi(openapi_url: str, header: str = None) -> str:
-    """
-    Apply the proxy to the OpenAPI URL.
-    """
-    if openapi_url.startswith("http"):
-        new_url = f"/proxy?url={openapi_url}"
-        if header:
-            header = quote(json.dumps(header))
-            new_url += f"&headers={header}"
-        return new_url
-    return openapi_url
-
-
 @app.get("/", response_class=HTMLResponse)
-async def docs(request: Request, template:str=None, user=Depends(require_login)):
-    """
-    Main documentation page.
-    """
+async def index(request: Request, template:str='swagger-ui', user=Depends(require_login)):
+    if template.lower() not in ["redoc", "swagger-ui"]:
+        raise HTTPException(status_code=400, detail="Invalid template. Use 'redoc' or 'swagger-ui'.")
+
     try:
-        with open('static/openapi/urls.json', 'r') as f:
-            swaggers = json.load(f)
-            logger.info(f"Loaded {len(swaggers)} URLs.")
-    except FileNotFoundError:
-        logger.error("File not found: static/openapi/urls.json")
-        request.session['error'] = "File not found: static/openapi/urls.json"
-        swaggers = [
-            {
-                "url": "/openapi.json",
-                "name": "Swagger Aggregator",
-                "header": "",
-            }
-        ]
-    except json.JSONDecodeError:
-        logger.error("Error decoding JSON from static/openapi/urls.json")
-        request.session['error'] = "Error decoding JSON from static/openapi/urls.json"
-        swaggers = [
-            {
-                "url": "/openapi.json",
-                "name": "Swagger Aggregator",
-                "header": "",
-            }
-        ]
+        with open('static/openapi/services.json', 'r') as f:
+            services = json.load(f)
+            logger.info(f"Loaded {len(services)} services.")
+    except Exception as e:
+        logger.error(f"Error loading services file: {e}")
+        raise HTTPException(status_code=500, detail="Error loading services file.")
+    
+    urls = []
+    for service_name, service in services.items():
+        urls.append({
+            "url": f"/services/{service_name}",
+            "name": service['name'],
+            "header": service.get("header", ""),
+        })
 
-    for swagger in swaggers:
-        swagger["url"] = apply_proxy_to_openapi(swagger.get("url"), parse_headers(swagger.get("header")))
+    match template.lower():
+        case "redoc":
+            return templates.TemplateResponse(
+                "redoc.html",
+                {
+                    "request": request,
+                    "urls": urls,
+                    "title": os.environ.get("TITLE", "API Documentation"),
+                }
+            )
+        case "swagger-ui":
+            return templates.TemplateResponse(
+                "swagger-ui.html",
+                {
+                    "request": request,
+                    "urls": urls,
+                    "title": os.environ.get("TITLE", "API Documentation"),
+                }
+            )
+        case _:
+            logger.error(f"Invalid template: {template}")
+            raise HTTPException(status_code=400, detail="Invalid template. Use 'redoc' or 'swagger-ui'.")
 
-    if template and template.lower() in ["redoc", "swagger-ui"]:
-        return templates.TemplateResponse(
-            f"{template.lower()}.html",
-            {
-                "request": request,
-                "urls": swaggers,
-                "title": os.environ.get("TITLE", "API Documentation"),
-            }
-        )
-    interface = os.environ.get("INTERFACE", "swagger-ui").lower()
-    if interface not in ["swagger-ui", "redoc"]:
-        interface = "swagger-ui"
-    return templates.TemplateResponse(
-        f"{interface}.html",
-        {
-            "request": request,
-            "urls": swaggers,
-            "title": os.environ.get("TITLE", "API Documentation"),
-        }
-    )
 
 @app.get("/config", response_class=HTMLResponse, include_in_schema=False)
 async def config(request: Request, user=Depends(require_login)):

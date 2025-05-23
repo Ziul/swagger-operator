@@ -32,7 +32,7 @@ def test_path_without_slash(fake_memo):
     logger = MagicMock()
     with patch("builtins.open"), patch("json.dump"):
         service_event(event, fake_memo, logger)
-    key = "default/my-app"
+    key = "default.my-app"
     assert key in fake_memo.apps
     # The final path should contain the original path
     assert fake_memo.apps[key]['url'].endswith("/openapi.json")
@@ -43,7 +43,7 @@ def test_path_with_slash(fake_memo):
     logger = MagicMock()
     with patch("builtins.open"), patch("json.dump"):
         service_event(event, fake_memo, logger)
-    key = "default/my-app"
+    key = "default.my-app"
     assert key in fake_memo.apps
     assert fake_memo.apps[key]['url'].endswith("/openapi.json")
 
@@ -53,7 +53,7 @@ def test_path_with_host(fake_memo):
     logger = MagicMock()
     with patch("builtins.open"), patch("json.dump"):
         service_event(event, fake_memo, logger)
-    key = "default/my-app"
+    key = "default.my-app"
     assert key in fake_memo.apps
     # The host should be preserved
     assert fake_memo.apps[key]['url'].startswith("http://myhost")
@@ -72,7 +72,7 @@ def test_missing_annotation(fake_memo):
 
 def test_service_event_deleted(fake_memo):
     # Pre-add an app to memo
-    fake_memo.apps["default/my-app"] = {
+    fake_memo.apps["default.my-app"] = {
         "url": "http://dummy",
         "name": "my-app",
         "header": "X-API-KEY"
@@ -96,4 +96,4 @@ def test_service_event_deleted(fake_memo):
     with patch("builtins.open"), patch("json.dump"):
         service_event(event, fake_memo, logger)
     # Should remove the app from memo
-    assert "default/my-app" not in fake_memo.apps
+    assert "default.my-app" not in fake_memo.apps

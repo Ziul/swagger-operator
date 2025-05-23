@@ -39,10 +39,10 @@ def service_event(event, memo: kopf.Memo, logger, **kwargs):
 
 
     if event['type'] == 'DELETED':
-        if f"{namespace}/{application_name}" in memo.apps:
-            del memo.apps[f"{namespace}/{application_name}"]
+        if f"{namespace}.{application_name}" in memo.apps:
+            del memo.apps[f"{namespace}.{application_name}"]
     else:
-        memo.apps.update({f"{namespace}/{application_name}": {
+        memo.apps.update({f"{namespace}.{application_name}": {
             'url': urlunparse(application_url),
             'name': application_name,
             'header': annotations.get(name_header, ""),
@@ -55,3 +55,6 @@ def service_event(event, memo: kopf.Memo, logger, **kwargs):
         with open('static/openapi/urls.json', 'w') as file:
             json.dump(urls, file, indent=2)
             logger.info("URLs written to file.")
+        with open('static/openapi/services.json', 'w') as file:
+            json.dump(memo.apps, file, indent=2)
+            logger.info("Services written to file.")

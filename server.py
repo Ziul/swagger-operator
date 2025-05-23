@@ -150,8 +150,8 @@ async def config(request: Request, user=Depends(require_login)):
     Configuration page for the OpenAPI URLs.
     """
     try:
-        with open('static/openapi/urls.json') as f:
-            swaggers = json.load(f)
+        with open('static/openapi/services.json') as f:
+            swaggers = json.load(f).values()
     except Exception as e:
         logger.error(f"Error loading configuration file: {e}")
         swaggers = []
